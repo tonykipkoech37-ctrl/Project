@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8" /><title>Post a Car</title><link rel="stylesheet" href="style.css" /></head>
+<body>
+  <header><h1>Post a Car</h1><a href="index.html">← Back</a></header>
+  <form id="form" enctype="multipart/form-data">
+    <label>Make <input name="make" required /></label>
+    <label>Model <input name="model" required /></label>
+    <label>Year <input name="year" type="number" required /></label>
+    <label>Price ($) <input name="price" type="number" required /></label>
+    <label>Mileage (km) <input name="mileage" type="number" required /></label>
+    <label>Fuel
+      <select name="fuel"><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select>
+    </label>
+    <label>Transmission
+      <select name="transmission"><option>Manual</option><option>Automatic</option></select>
+    </label>
+    <label>Body type
+      <select name="bodyType"><option>Sedan</option><option>SUV</option><option>Hatchback</option><option>Pickup</option><option>Coupe</option></select>
+    </label>
+    <label>Description <textarea name="description" rows="4"></textarea></label>
+    <label>Photo <input type="file" name="photo" accept="image/*" /></label>
+    <label>Your name <input name="sellerName" /></label>
+    <label>Contact <input name="sellerContact" /></label>
+    <button type="submit">Publish</button>
+  </form>
+  <script>
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const res = await fetch('/api/listings', {
+        method: 'POST',
+        body: new FormData(e.target)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        return alert(err.error || 'Failed');
+      }
+      const { id } = await res.json();
+      location.href = `listing.html?id=${id}`;
+    });
+  </script>
+</body>
+</html>
