@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Car Details</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="detail">
+  <header>
+    <h1 id="title">Loading…</h1>
+    <a href="index.html">← Back to listings</a>
+  </header>
+
+  <div id="content">
+    <p class="empty">Loading car details…</p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+
+    async function loadListing() {
+      if (!id) {
+        document.getElementById('content').innerHTML =
+          '<p class="empty">No listing id provided.</p>';
+        return;
+      }
+
+      const res = await fetch(`/api/listings/${id}`);
+      if (!res.ok) {
+        document.getElementById('content').innerHTML =
+          '<p class="empty">Listing not found.</p>';
+        return;
+      }
+      const c = await res.json();
+
+      document.title = `${c.year} ${c.make} ${c.model}`;
+      document.getElementById('title').textContent = `${c.year} ${c.make} ${c.model}`;
+
+      document.getElementById('content').innerHTML = `
+        <img class="hero" src="${c.photo || 'placeholder.png'}"
+             alt="${c.make} ${c.model}" />
+
+        <div class="specs">
+          <div class="spec"><div class="label">Year</div>
+            <div class="value">${c.year}</div></div>
+          <div class="spec"><div class="label">Price</div>
+            <div class="value">$${c.price.toLocaleString()}</div></div>
+          <div class="spec"><div class="label">Mileage</div>
+            <div class="value">${c.mileage.toLocaleString()} km</div></div>
+          <div class="spec"><div class="label">Fuel</div>
+            <div class="value">${c.fuel || '—'}</div></div>
+          <div class="spec"><div class="label">Transmission</div>
+            <div class="value">${c.transmission || '—'}</div></div>
+          <div class="spec"><div class="label">Body</div>
+            <div class="value">${c.bodyType || '—'}</div></div>
+        </div>
+
+        ${c.description ? `<p class="description">${escapeHtml(c.description)}</p>` : ''}
+
+        ${c.sellerName || c.sellerContact ? `
+          <div class="specs">
+            ${c.sellerName ? `<div class="spec"><div class="label">Seller</div>
+              <div class="value">${escapeHtml(c.sellerName)}</div></div>` : ''}
+            ${c.sellerContact ? `<div class="spec"><div class="label">Contact</div>
+              <div class="value">${escapeHtml(c.sellerContact)}</div></div>` : ''}
+          </div>` : ''}
+
+        <div class="actions">
+          <button class="danger" onclick="deleteListing()">Delete Listing</button>
+        </div>
+      `;
+    }
+
+    async function deleteListing() {
+      if (!confirm('Delete this listing permanently?')) return;
+      const res = await fetch(`/api/listings/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        location.href = 'index.html';
+      } else {
+        alert('Failed to delete listing.');
+      }
+    }
+
+    // basic XSS guard for user-supplied text
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+
+    loadListing();
+  </script>
+</body>
+</html>
